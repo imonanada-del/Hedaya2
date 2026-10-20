@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>لعبة الأبواب الغامضة - حديقة التواضع</title>
+    <style>
+        :root {
+            --sky-blue: #E0F2FE;
+            --sky-blue-dark: #38BDF8;
+            --garden-green: #10B981;
+            --garden-green-dark: #047857;
+            --garden-leaf: #34D399;
+            --sunny-yellow: #FACC15;
+            --sunny-yellow-hover: #FDE047;
+            --cream-white: #FFFFFF;
+            --text-dark: #1E293B;
+            --card-bg: rgba(255, 255, 255, 0.96);
+            --correct-green: #10B981;
+            --wrong-red: #EF4444;
+            --gold-glow: rgba(250, 204, 21, 0.5);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--sky-blue);
+            background-image: 
+                radial-gradient(circle at 50% 10%, rgba(255, 255, 255, 0.8) 0%, rgba(224, 242, 254, 0.9) 60%, rgba(186, 230, 253, 1) 100%),
+                radial-gradient(circle at 10% 90%, rgba(52, 211, 153, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(250, 204, 21, 0.15) 0%, transparent 40%);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Header Layout */
+        header {
+            width: 100%;
+            max-width: 1050px;
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 3px solid var(--garden-green);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.15);
+            z-index: 10;
+        }
+
+        .player-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--garden-green-dark);
+        }
+
+        .player-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--sunny-yellow);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+            box-shadow: 0 2px 8px var(--gold-glow);
+        }
+
+        .stats-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stat-box {
+            background: #F0FDF4;
+            border: 2px solid var(--garden-green);
+            padding: 6px 14px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            color: var(--garden-green-dark);
+        }
+
+        .lives-box span {
+            color: #EF4444;
+            font-size: 1.1rem;
+            filter: drop-shadow(0 1px 2px rgba(239, 68, 68, 0.4));
+        }
+
+        .admin-btn {
+            background: var(--cream-white);
+            border: 2px solid var(--garden-green);
+            color: var(--garden-green-dark);
+            padding: 6px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .admin-btn:hover {
+            background: var(--garden-green);
+            color: var(--cream-white);
+        }
+
+        main {
+            flex: 1;
+            width: 100%;
+            max-width: 1050px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px 12px;
+            position: relative;
+        }
+
+        .round-banner {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .round-title {
+            font-size: 1.8rem;
+            color: var(--garden-green-dark);
+            text-shadow: 0 2px 4px rgba(255, 255, 255, 0.8);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .round-subtitle {
+            color: #0369A1;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .doors-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 1000px;
+            padding: 10px;
+        }
+
+        @media (max-width: 900px) {
+            .doors-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .doors-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 10px;
+            }
+        }
+
+        /* Single Door Styling */
+        .door-wrapper {
+            height: 135px;
+            position: relative;
+            perspective: 800px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 480px) {
+            .door-wrapper {
+                height: 110px;
+            }
+        }
+
+        .door-frame {
+            width: 100%;
+            height: 100%;
+            background: #ECFDF5;
+            border: 3px solid var(--garden-green);
+            border-radius: 40px 40px 8px 8px;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2), inset 0 0 10px rgba(52, 211, 153, 0.2);
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .door-inner-light {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, #FEF08A 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .door-leaf {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);
+            border: 2px solid var(--sunny-yellow);
+            border-radius: 36px 36px 6px 6px;
+            transform-origin: right center;
+            transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.15);
+            z-index: 2;
+        }
+
+        .door-pattern {
+            width: 75%;
+            height: 75%;
+            border: 1.5px dashed rgba(250, 204, 21, 0.7);
+            border-radius: 28px 28px 4px 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .door-knob {
+            width: 10px;
+            height: 10px;
+            background: radial-gradient(circle at 30% 30%, #FFF, var(--sunny-yellow));
+            border-radius: 50%;
+            position: absolute;
+            left: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            box-shadow: 0 0 6px var(--sunny-yellow);
+        }
+
+        .door-number {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--sunny-yellow);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+
+        .door-wrapper:hover:not(.opened):not(.completed) .door-leaf {
+            border-color: #FFF;
+            box-shadow: 0 0 12px var(--gold-glow);
+        }
+
+        .door-wrapper.opened .door-leaf {
+            transform: rotateY(-110deg);
+        }
+
+        .door-wrapper.opened .door-inner-light {
+            opacity: 1;
+        }
+
+        .door-wrapper.completed {
+            cursor: default;
+            opacity: 0.8;
+        }
+
+        .door-wrapper.completed .door-leaf {
+            transform: rotateY(-110deg);
+        }
+
+        .door-status-icon {
+            font-size: 1.8rem;
+            z-index: 1;
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.8; }
+            100% { transform: scale(1.1); opacity: 1; }
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(6px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            padding: 16px;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: var(--card-bg);
+            border: 3px solid var(--garden-green);
+            border-radius: 20px;
+            padding: 24px 20px;
+            width: 100%;
+            max-width: 540px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.25);
+            transform: translateY(20px) scale(0.95);
+            transition: transform 0.3s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: translateY(0) scale(1);
+        }
+
+        .modal-title {
+            font-size: 1.4rem;
+            color: var(--garden-green-dark);
+            margin-bottom: 14px;
+        }
+
+        .modal-body {
+            font-size: 1.1rem;
+            color: var(--text-dark);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin: 20px 0;
+            text-align: right;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--garden-green-dark);
+            font-weight: bold;
+            font-size: 0.95rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 2px solid var(--garden-green);
+            background: #F0FDF4;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+            outline: none;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .input-group input:focus {
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+            background: #FFF;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--garden-green) 0%, var(--garden-green-dark) 100%);
+            color: var(--cream-white);
+            border: none;
+            padding: 12px 28px;
+            font-size: 1.05rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--cream-white);
+            border: 2px solid var(--garden-green);
+            color: var(--garden-green-dark);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background: #F0FDF4;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .option-btn {
+            background: #F0FDF4;
+            border: 2px solid #A7F3D0;
+            color: var(--text-dark);
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: right;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .option-btn:hover {
+            border-color: var(--garden-green);
+            background: #DCFCE7;
+            transform: translateX(-4px);
+        }
+
+        .badge-type {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-bottom: 12px;
+            background: #E0F2FE;
+            color: #0284C7;
+            border: 1px solid #38BDF8;
+        }
+
+        .feedback-icon {
+            font-size: 3.5rem;
+            margin-bottom: 10px;
+            animation: bounceIn 0.5s ease;
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0); }
+            60% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .score-pop {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: var(--garden-green-dark);
+            text-shadow: 0 0 10px #FFF;
+            pointer-events: none;
+            opacity: 0;
+            transition: all 0.8s ease-out;
+            z-index: 150;
+        }
+
+        .score-pop.show {
+            opacity: 1;
+            transform: translate(-50%, -100%);
+        }
+
+        /* Admin Table */
+        .admin-table-container {
+            width: 100%;
+            max-height: 280px;
+            overflow-y: auto;
+            margin: 15px 0;
+            border: 2px solid #A7F3D0;
+            border-radius: 10px;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .admin-table th, .admin-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #E2E8F0;
+        }
+
+        .admin-table th {
+            background: #F0FDF4;
+            color: var(--garden-green-dark);
+            position: sticky;
+            top: 0;
+            font-size: 0.9rem;
+        }
+
+        .admin-table tr:nth-child(even) {
+            background: #F8FAFC;
+        }
+
+        footer {
+            padding: 12px;
+            font-size: 0.85rem;
+            color: #0369A1;
+            text-align: center;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="player-info">
+            <div class="player-icon" id="playerAvatar">🌱</div>
+            <span id="displayName">طالب متواضع</span>
+        </div>
+        <div class="stats-container">
+            <div class="stat-box">
+                <span>✏️</span>
+                <span id="scoreDisplay">0</span>
+            </div>
+            <div class="stat-box lives-box">
+                <span id="livesDisplay">❤️❤️❤️</span>
+            </div>
+            <button class="admin-btn" onclick="promptAdminPass()">
+                <span>🔒</span> السجل
+            </button>
+        </div>
+    </header>
+
+    <main id="mainContainer">
+        <!-- Floating Score Pop -->
+        <div id="scorePop" class="score-pop">+100</div>
+
+        <div class="round-banner">
+            <h1 class="round-title">🌸 حديقة التواضع - الأبواب الغامضة 🚪</h1>
+            <p class="round-subtitle" id="progressSubtitle">اختر باباً لتجيب عن السؤال وتكتشف محتواه الطيب!</p>
+        </div>
+
+        <!-- 17 Doors Grid -->
+        <div class="doors-grid" id="doorsGrid">
+            <!-- Dynamically populated 17 doors -->
+        </div>
+    </main>
+
+    <footer>
+        حديقة التواضع - لعبة تعليمية تفاعلية 🌸
+    </footer>
+
+    <!-- Welcome Modal -->
+    <div class="modal-overlay active" id="welcomeModal">
+        <div class="modal-card">
+            <div class="feedback-icon">🎁</div>
+            <h2 class="modal-title">🌸 مرحباً بك في حديقة التواضع</h2>
+            <div class="modal-body">
+                أهلاً بك يا بطل في رحلة اكتشاف خُلق التواضع الجميل!
+                <br>أمامك 17 باباً غامضاً يحوي كل منها سؤالاً مفيداً.
+                <div class="input-group">
+                    <label for="studentNameInput">ادخل اسمك الكامل للبدء:</label>
+                    <input type="text" id="studentNameInput" placeholder="اكتب اسمك هنا..." autocomplete="off">
+                </div>
+            </div>
+            <button class="btn" onclick="startGame()">
+                <span>🚀</span> ابدأ المغامرة
+            </button>
+        </div>
+    </div>
+
+    <!-- Question Modal -->
+    <div class="modal-overlay" id="questionModal">
+        <div class="modal-card">
+            <span class="badge-type" id="questionBadge">سؤال الباب</span>
+            <h2 class="modal-title" id="questionTitle">السؤال</h2>
+            <div class="modal-body" id="questionText">
+                محتوى السؤال هنا...
+            </div>
+            <div class="options-grid" id="optionsContainer">
+                <!-- Dynamic options -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div class="modal-overlay" id="feedbackModal">
+        <div class="modal-card">
+            <div class="feedback-icon" id="feedbackIcon">🎁</div>
+            <h2 class="modal-title" id="feedbackTitle">نتيجة رائع!</h2>
+            <div class="modal-body" id="feedbackText">
+                رسالة التغذية الراجعة...
+            </div>
+            <button class="btn" onclick="closeFeedbackAndNext()">
+                <span>متابعة ➔</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Game Over / Win Modal -->
+    <div class="modal-overlay" id="endModal">
+        <div class="modal-card">
+            <div class="feedback-icon" id="endIcon">✏️</div>
+            <h2 class="modal-title" id="endTitle">مبروك الفوز!</h2>
+            <div class="modal-body" id="endText">
+                أنهيت الأبواب بنجاح وحصلت على نتيجة متميزة.
+            </div>
+            <button class="btn" onclick="resetGame()">
+                <span>🔄</span> إعادة اللعب
+            </button>
+        </div>
+    </div>
+
+    <!-- Admin Modal -->
+    <div class="modal-overlay" id="adminModal">
+        <div class="modal-card" style="max-width: 650px;">
+            <h2 class="modal-title">📊 سجل درجات ودخول الطلاب</h2>
+            <p style="font-size: 0.9rem; color: var(--text-dark); margin-bottom: 10px;">
+                يعرض هذا السجل جميع الطلاب الذين دخلوا اللعبة ودرجاتهم وحالة إنهاء اللعب.
+            </p>
+            <div class="admin-table-container">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>الاسم</th>
+                            <th>التاريخ والتوقيت</th>
+                            <th>الأبواب</th>
+                            <th>النقاط</th>
+                            <th>الأرواح</th>
+                            <th>الحالة</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminLogBody">
+                        <!-- Dynamic Rows -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Google Sheets Integration Section -->
+            <div style="margin: 15px 0; padding: 12px; background: #F0FDF4; border: 2px solid var(--garden-green); border-radius: 12px; text-align: right;">
+                <h3 style="color: var(--garden-green-dark); font-size: 0.95rem; margin-bottom: 6px;">📊 ربط اللعبة بـ Google Sheets:</h3>
+                <p style="font-size: 0.82rem; color: #0369A1; margin-bottom: 8px;">
+                    ضع رابط Google Web App المباشر لإرسال بيانات واسم ودرجة كل طالب تلقائياً لشيت جوجل:
+                </p>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <input type="text" id="googleSheetUrlInput" placeholder="https://script.google.com/macros/s/.../exec" style="flex: 1; min-width: 200px; padding: 8px; border-radius: 8px; border: 1.5px solid var(--garden-green); background: #FFF; color: var(--text-dark); font-size: 0.85rem;" />
+                    <button class="btn" style="padding: 8px 14px; font-size: 0.85rem;" onclick="saveGoogleSheetUrl()">حفظ الرابط</button>
+                    <button class="btn btn-secondary" style="padding: 8px 12px; font-size: 0.85rem;" onclick="showGoogleScriptInstructions()">📜 كود Script</button>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 15px;">
+                <button class="btn" onclick="exportToCSV()">
+                    <span>📥</span> تصدير إلى Excel
+                </button>
+                <button class="btn btn-secondary" onclick="clearScoreLog()">
+                    <span>🗑️</span> مسح السجل
+                </button>
+                <button class="btn btn-secondary" onclick="closeModal('adminModal')">
+                    إغلاق
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Web Audio Synthesizer
+        let audioCtx = null;
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function playSound(type) {
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                const now = ctx.currentTime;
+
+                if (type === 'door') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.exponentialRampToValueAtTime(450, now + 0.35);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } 
+                else if (type === 'correct') {
+                    const freqs = [523.25, 659.25, 783.99, 1046.50];
+                    freqs.forEach((f, idx) => {
+                        const subOsc = ctx.createOscillator();
+                        const subGain = ctx.createGain();
+                        subOsc.type = 'triangle';
+                        subOsc.frequency.setValueAtTime(f, now + idx * 0.08);
+                        subGain.gain.setValueAtTime(0.25, now + idx * 0.08);
+                        subGain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.3);
+                        subOsc.connect(subGain);
+                        subGain.connect(ctx.destination);
+                        subOsc.start(now + idx * 0.08);
+                        subOsc.stop(now + idx * 0.08 + 0.3);
+                    });
+                } 
+                else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.linearRampToValueAtTime(110, now + 0.35);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                    osc.start(now);
+                    osc.stop(now + 0.35);
+                } 
+                else if (type === 'win') {
+                    const notes = [523.25, 659.25, 783.99, 1046.5, 880, 1046.5];
+                    notes.forEach((f, idx) => {
+                        const subOsc = ctx.createOscillator();
+                        const subGain = ctx.createGain();
+                        subOsc.type = 'square';
+                        subOsc.frequency.setValueAtTime(f, now + idx * 0.12);
+                        subGain.gain.setValueAtTime(0.15, now + idx * 0.12);
+                        subGain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.35);
+                        subOsc.connect(subGain);
+                        subGain.connect(ctx.destination);
+                        subOsc.start(now + idx * 0.12);
+                        subOsc.stop(now + idx * 0.12 + 0.35);
+                    });
+                }
+            } catch (e) {
+                console.log("Audio error:", e);
+            }
+        }
+
+        // Updated Questions Dataset on Humility (التواضع) - 17 Questions
+        const questionsList = [
+            // 9 True/False Questions
+            { id: 1, type: 'tf', text: 'التواضع مذكور في القرآن والسنة', answer: true },
+            { id: 2, type: 'tf', text: 'التواضع هو ترك التروس وكراهية التعظيم', answer: true },
+            { id: 3, type: 'tf', text: 'التواضع يرفع المرء قدرًا، ويعظم له خطرًا، ويزيده نبلًا', answer: true },
+            { id: 4, type: 'tf', text: 'المتواضع شخص مكروه بين الناس', answer: false },
+            { id: 5, type: 'tf', text: 'التواضع يؤلف القلوب ويفتح مغاليقها', answer: true },
+            { id: 6, type: 'tf', text: 'أقسام التواضع ثلاثة', answer: false },
+            { id: 7, type: 'tf', text: 'التواضع تواضعان، أحدهما محمود والآخر مذموم', answer: true },
+            { id: 8, type: 'tf', text: 'من صور التواضع تواضع الإنسان في نفسه', answer: true },
+            { id: 9, type: 'tf', text: 'من صور التواضع التواضع في العلم ومع الناس', answer: true },
+
+            // 7 Multiple Choice Questions
+            {
+                id: 10,
+                type: 'mc',
+                text: 'خُلُقٌ من الأخلاق الفاضلة، وهو صفة حميدة وخصلة كريمة ينال بها العبد رضا الله تعالى وحب الناس، فما هذا الخلق؟',
+                options: [
+                    { text: 'التواضع', correct: true },
+                    { text: 'العجب', correct: false }
+                ]
+            },
+            {
+                id: 11,
+                type: 'mc',
+                text: 'من معاني التواضع:',
+                options: [
+                    { text: 'البعد عن التفاخر على الآخرين بما عندي من النعم', correct: false },
+                    { text: 'أن أرى كل مسلم أفضل مني', correct: false },
+                    { text: 'كلاهما', correct: true }
+                ]
+            },
+            {
+                id: 12,
+                type: 'mc',
+                text: 'من فوائد التواضع:',
+                options: [
+                    { text: 'يرفع الإنسان قدرًا ويُعظم له الأجر', correct: false },
+                    { text: 'فيه مصلحة الدين والدنيا، ويزيل البغضاء بين الناس ويؤلف بينهم', correct: false },
+                    { text: 'جميع ما سبق', correct: true }
+                ]
+            },
+            {
+                id: 13,
+                type: 'mc',
+                text: 'من الوسائل المعينة على اكتساب صفة التواضع:',
+                options: [
+                    { text: 'تقوى الله واستشعار عظمته', correct: false },
+                    { text: 'أن تعامل الناس بمثل ما تحب أن يعاملوك', correct: false },
+                    { text: 'تطهير القلب من الحقد والحسد والعجب وغير ذلك', correct: false },
+                    { text: 'جميع ما سبق', correct: true }
+                ]
+            },
+            {
+                id: 14,
+                type: 'mc',
+                text: 'تواضع الإنسان في نفسه هو أن:',
+                options: [
+                    { text: 'لا يظن أنه أعلم من غيره أو أفضل منه', correct: true },
+                    { text: 'أن يرى نفسه أفضل من الآخرين', correct: false }
+                ]
+            },
+            {
+                id: 15,
+                type: 'mc',
+                text: 'إذا فعلت شيئًا خاطئًا، ونصحك أخوك أو صديقك وبيّن لك خطأك، فماذا تفعل؟',
+                options: [
+                    { text: 'تغضب وتصرخ وتقول: "أنا لا أخطئ"', correct: false },
+                    { text: 'تسخر من الشخص الذي نصحك', correct: false },
+                    { text: 'تستمع بهدوء وتشكره لأنه ساعدك على تصحيح الخطأ', correct: true }
+                ]
+            },
+            {
+                id: 16,
+                type: 'mc',
+                text: 'إذا فزت في مسابقة في المدرسة، فكيف تكون أخلاقك مع أصدقائك الذين لم يفوزوا؟',
+                options: [
+                    { text: 'تتباهى أمامهم طوال اليوم لتجعلهم يحزنون', correct: false },
+                    { text: 'تسخر منهم لأنهم خسروا وأنت الوحيد الذي فاز', correct: false },
+                    { text: 'تفرح بفوزك، وتشجع أصدقائك بلطف، وتواسيهم بكلام طيب', correct: true }
+                ]
+            }
+        ];
+
+        const positivePhrases = [
+            "أحسنت يا متواضع! إجابة سديدة ومثالية 🎁",
+            "رائع جداً! معرفتك بالخُلق العظيم تنير دربك 🎁",
+            "ممتاز! عمل صالح وإجابة صحيحة 👏",
+            "إجابة موفقة! استمر في التميز والتقدم 🚀",
+            "بارَك الله فيك! خطواتك نحو النجاح ثابتة 💪"
+        ];
+
+        const encouragingPhrases = [
+            "لا بأس يا بطل! تعلمت المعلومة الصحيحة الآن 🌱",
+            "محاولة طيبة! فقدت روحاً واحدة ولكن الرحلة مستمرة 💪",
+            "ركز أكثر في الباب القادم، فالمغامرة لم تنتهِ بعد! ☀️",
+            "كل خطوة هي درس مفيد، استجمع قواك وانطلق! 🚀"
+        ];
+
+        let playerName = '';
+        let score = 0;
+        let lives = 3;
+        let openedDoorsCount = 0;
+        let doorStates = Array(17).fill(false); // track opened doors for 17 doors
+        let currentActiveDoorIndex = -1;
+        let isOpeningDoor = false;
+        let currentSessionId = null;
+
+        function startGame() {
+            const input = document.getElementById('studentNameInput');
+            const name = input.value.trim();
+            if (!name) {
+                alert('يرجى إدخال اسم الطالب أولاً للبدء!');
+                return;
+            }
+            playerName = name;
+            document.getElementById('displayName').innerText = playerName;
+            closeModal('welcomeModal');
+            
+            getAudioContext();
+            resetGameState();
+            
+            // Register student entry in records immediately upon starting
+            createNewSessionRecord();
+        }
+
+        function createNewSessionRecord() {
+            currentSessionId = Date.now();
+            const records = JSON.parse(localStorage.getItem('doors_game_records') || '[]');
+            const newRecord = {
+                id: currentSessionId,
+                name: playerName,
+                date: new Date().toLocaleString('ar-EG'),
+                score: 0,
+                doorsOpened: 0,
+                lives: 3,
+                status: 'جاري اللعب ⏳'
+            };
+            records.push(newRecord);
+            localStorage.setItem('doors_game_records', JSON.stringify(records));
+            
+            // Send to Google Sheet automatically
+            sendToGoogleSheet(newRecord);
+        }
+
+        function updateSessionRecord(isEnd = false, isWin = false) {
+            if (!currentSessionId) return;
+            const records = JSON.parse(localStorage.getItem('doors_game_records') || '[]');
+            const index = records.findIndex(r => r.id === currentSessionId);
+            if (index !== -1) {
+                records[index].score = score;
+                records[index].doorsOpened = openedDoorsCount;
+                records[index].lives = lives;
+                records[index].date = new Date().toLocaleString('ar-EG');
+                if (isEnd) {
+                    records[index].status = isWin ? 'فوز ✏️' : 'خسارة 💔';
+                }
+                localStorage.setItem('doors_game_records', JSON.stringify(records));
+
+                // Update record on Google Sheet
+                sendToGoogleSheet(records[index]);
+            }
+        }
+
+        function sendToGoogleSheet(recordData) {
+            const sheetUrl = localStorage.getItem('doors_game_sheet_url');
+            if (!sheetUrl) return;
+            try {
+                fetch(sheetUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify(recordData)
+                }).catch(err => console.log('Google Sheet sync error:', err));
+            } catch (e) {
+                console.log('Google Sheet Exception:', e);
+            }
+        }
+
+        function resetGameState() {
+            score = 0;
+            lives = 3;
+            openedDoorsCount = 0;
+            doorStates = Array(17).fill(false);
+            isOpeningDoor = false;
+            updateHUD();
+            buildDoorsGrid();
+        }
+
+        function updateHUD() {
+            document.getElementById('scoreDisplay').innerText = score;
+            let hearts = '';
+            for (let i = 0; i < lives; i++) hearts += '❤️';
+            for (let i = lives; i < 3; i++) hearts += '🖤';
+            document.getElementById('livesDisplay').innerText = hearts || '🖤🖤🖤';
+            document.getElementById('progressSubtitle').innerText = `الأبواب المتبقية: ${17 - openedDoorsCount} من أصل 17`;
+        }
+
+        function buildDoorsGrid() {
+            const grid = document.getElementById('doorsGrid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < 17; i++) {
+                const doorWrapper = document.createElement('div');
+                doorWrapper.className = 'door-wrapper' + (doorStates[i] ? ' completed' : '');
+                doorWrapper.onclick = () => selectDoor(i);
+
+                doorWrapper.innerHTML = `
+                    <div class="door-frame">
+                        <div class="door-inner-light"></div>
+                        <div class="door-status-icon">${doorStates[i] ? '✅' : '🎁'}</div>
+                        <div class="door-leaf">
+                            <div class="door-pattern">
+                                <span class="door-number">${i + 1}</span>
+                                <div class="door-knob"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(doorWrapper);
+            }
+        }
+
+        function selectDoor(index) {
+            if (doorStates[index] || isOpeningDoor || lives <= 0) return;
+
+            isOpeningDoor = true;
+            currentActiveDoorIndex = index;
+
+            playSound('door');
+
+            const grid = document.getElementById('doorsGrid');
+            const targetDoor = grid.children[index];
+            targetDoor.classList.add('opened');
+
+            setTimeout(() => {
+                showQuestionModal(questionsList[index]);
+            }, 600);
+        }
+
+        function showQuestionModal(qData) {
+            const titleEl = document.getElementById('questionTitle');
+            const textEl = document.getElementById('questionText');
+            const badgeEl = document.getElementById('questionBadge');
+            const optionsContainer = document.getElementById('optionsContainer');
+
+            badgeEl.innerText = `الباب رقم ${currentActiveDoorIndex + 1}`;
+            titleEl.innerText = qData.type === 'tf' ? 'سؤال صح أم خطأ' : 'اختر الإجابة الصحيحة';
+            textEl.innerText = qData.text;
+
+            optionsContainer.innerHTML = '';
+
+            if (qData.type === 'tf') {
+                const btnTrue = document.createElement('button');
+                btnTrue.className = 'option-btn';
+                btnTrue.innerHTML = '<span>صحيح (✅)</span> <span>➔</span>';
+                btnTrue.onclick = () => handleAnswer(true, qData);
+
+                const btnFalse = document.createElement('button');
+                btnFalse.className = 'option-btn';
+                btnFalse.innerHTML = '<span>خطأ (❎)</span> <span>➔</span>';
+                btnFalse.onclick = () => handleAnswer(false, qData);
+
+                optionsContainer.appendChild(btnTrue);
+                optionsContainer.appendChild(btnFalse);
+            } else if (qData.type === 'mc') {
+                qData.options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-btn';
+                    btn.innerHTML = `<span>${opt.text}</span> <span>➔</span>`;
+                    btn.onclick = () => handleAnswer(opt.correct, qData);
+                    optionsContainer.appendChild(btn);
+                });
+            }
+
+            openModal('questionModal');
+        }
+
+        function handleAnswer(isUserCorrect, qData) {
+            closeModal('questionModal');
+
+            doorStates[currentActiveDoorIndex] = true;
+            openedDoorsCount++;
+
+            const grid = document.getElementById('doorsGrid');
+            const targetDoor = grid.children[currentActiveDoorIndex];
+            targetDoor.classList.add('completed');
+
+            let feedbackIcon = '';
+            let feedbackTitle = '';
+            let feedbackText = '';
+
+            if (isUserCorrect) {
+                playSound('correct');
+                score += 100;
+                showScorePop('+100');
+                
+                feedbackIcon = '🎁';
+                feedbackTitle = 'إجابة صحيحة وزاهية!';
+                feedbackText = positivePhrases[Math.floor(Math.random() * positivePhrases.length)];
+            } else {
+                playSound('wrong');
+                lives--;
+                
+                feedbackIcon = '💔';
+                feedbackTitle = 'فقدت روحاً واحدة';
+                feedbackText = encouragingPhrases[Math.floor(Math.random() * encouragingPhrases.length)];
+            }
+
+            updateHUD();
+            updateSessionRecord();
+
+            setTimeout(() => {
+                showFeedbackModal(feedbackIcon, feedbackTitle, feedbackText);
+            }, 300);
+        }
+
+        function showScorePop(text) {
+            const pop = document.getElementById('scorePop');
+            pop.innerText = text;
+            pop.classList.add('show');
+            setTimeout(() => {
+                pop.classList.remove('show');
+            }, 800);
+        }
+
+        function showFeedbackModal(icon, title, text) {
+            document.getElementById('feedbackIcon').innerText = icon;
+            document.getElementById('feedbackTitle').innerText = title;
+            document.getElementById('feedbackText').innerText = text;
+            openModal('feedbackModal');
+        }
+
+        function closeFeedbackAndNext() {
+            closeModal('feedbackModal');
+            isOpeningDoor = false;
+
+            // Check Game Over or Win condition
+            if (lives <= 0) {
+                endGame(false);
+            } else if (openedDoorsCount >= 17) {
+                endGame(true);
+            }
+        }
+
+        function endGame(isWin) {
+            updateSessionRecord(true, isWin);
+
+            if (isWin) {
+                playSound('win');
+                document.getElementById('endIcon').innerText = '✏️';
+                document.getElementById('endTitle').innerText = '🎉 مبروك الفوز التام!';
+                document.getElementById('endText').innerHTML = `
+                    أحسنت يا بطل! أنهيت جميع أبواب حديقة التواضع الـ 17 بنجاح ورقي.
+                    <br><br><strong>مجموع النقاط: ${score}</strong>
+                `;
+            } else {
+                playSound('wrong');
+                document.getElementById('endIcon').innerText = '💔';
+                document.getElementById('endTitle').innerText = 'حظاً موفقاً المرة القادمة';
+                document.getElementById('endText').innerHTML = `
+                    لقد نفدت أرواحك الثلاثة. لكنك تعلمت الكثير عن خُلق التواضع العظيم!
+                    <br><br><strong>النقاط المحققة: ${score}</strong> | <strong>الأبواب: ${openedDoorsCount} / 17</strong>
+                `;
+            }
+
+            openModal('endModal');
+        }
+
+        function resetGame() {
+            closeModal('endModal');
+            resetGameState();
+            createNewSessionRecord();
+        }
+
+        function promptAdminPass() {
+            const pass = prompt('ادخل الرقم السري لعرض سجل الطلاب:');
+            if (pass === '2580') {
+                renderAdminLog();
+                openModal('adminModal');
+            } else if (pass !== null) {
+                alert('الرقم السري غير صحيح!');
+            }
+        }
+
+        function saveGoogleSheetUrl() {
+            const urlInput = document.getElementById('googleSheetUrlInput').value.trim();
+            if (urlInput) {
+                localStorage.setItem('doors_game_sheet_url', urlInput);
+                alert('تم حفظ رابط Google Sheet بنجاح! سيتم إرسال النتائج تلقائياً إلى الشيت مع كل سجل طالب جديد.');
+            } else {
+                localStorage.removeItem('doors_game_sheet_url');
+                alert('تم إزالة رابط Google Sheet.');
+            }
+        }
+
+        function showGoogleScriptInstructions() {
+            const codeText = `function doPost(e) {\n  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();\n  var data = JSON.parse(e.postData.contents);\n  sheet.appendRow([data.name, data.date, data.doorsOpened + " / 17", data.score, data.lives, data.status]);\n  return ContentService.createTextOutput("OK");\n}`;
+            alert("خطوات ربط Google Sheet:\n1. افتح جدول بيانات جديد في Google Sheets.\n2. من القائمة اختر: الإضافات (Extensions) -> Apps Script.\n3. الصق الكود التالي بداخل المحرر:\n\n" + codeText + "\n\n4. اضغط نشر (Deploy) -> نشر جديد (New deployment) -> اختر Web App.\n5. اضبط صلاحية الوصول (Who has access) إلى 'Anyone' (أي شخص).\n6. انسخ رابط التطبيق الممنوح وقم بلصقه في خانة الرابط هنا.");
+        }
+
+        function renderAdminLog() {
+            // Load saved Sheet URL into input field
+            const savedUrl = localStorage.getItem('doors_game_sheet_url') || '';
+            const urlInput = document.getElementById('googleSheetUrlInput');
+            if (urlInput) urlInput.value = savedUrl;
+
+            const records = JSON.parse(localStorage.getItem('doors_game_records') || '[]');
+            const tbody = document.getElementById('adminLogBody');
+            tbody.innerHTML = '';
+
+            if (records.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6">لا توجد سجلات مسجلة حتى الآن</td></tr>';
+                return;
+            }
+
+            // Show newest entries first
+            const sortedRecords = [...records].reverse();
+
+            sortedRecords.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${r.name}</strong></td>
+                    <td>${r.date}</td>
+                    <td>${r.doorsOpened ?? 0} / 17</td>
+                    <td><strong>${r.score}</strong></td>
+                    <td>${r.lives}</td>
+                    <td>${r.status}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function clearScoreLog() {
+            if (confirm('هل أنت تأكد من مسح جميع سجلات الطلاب؟')) {
+                localStorage.removeItem('doors_game_records');
+                renderAdminLog();
+            }
+        }
+
+        function exportToCSV() {
+            const records = JSON.parse(localStorage.getItem('doors_game_records') || '[]');
+            if (records.length === 0) {
+                alert('لا توجد بيانات لتصديرها!');
+                return;
+            }
+
+            let csvContent = "\uFEFF";
+            csvContent += "اسم الطالب,تاريخ ووقت الدخول,الأبواب المنجزة,النقاط,الأرواح المتبقية,الحالة\n";
+
+            records.forEach(r => {
+                csvContent += `"${r.name}","${r.date}","${r.doorsOpened ?? 0}/17","${r.score}","${r.lives}","${r.status}"\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `سجل_درجات_حديقة_التواضع_${Date.now()}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        window.onload = function() {
+            document.getElementById('studentNameInput').focus();
+        };
+    </script>
+</body>
+</html>
