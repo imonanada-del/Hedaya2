@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -161,6 +162,7 @@
             font-weight: 600;
         }
 
+        /* 3D Doors Grid Layout */
         .doors-grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
@@ -302,6 +304,7 @@
             100% { transform: scale(1.1); opacity: 1; }
         }
 
+        /* Modal Overlays & Cards */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -567,9 +570,9 @@
             <p class="round-subtitle" id="progressSubtitle">اختر باباً لتجيب عن السؤال وتكتشف محتواه الطيب!</p>
         </div>
 
-        <!-- 17 Doors Grid -->
+        <!-- 16 Doors Grid -->
         <div class="doors-grid" id="doorsGrid">
-            <!-- Dynamically populated 17 doors -->
+            <!-- Dynamically populated 16 doors -->
         </div>
     </main>
 
@@ -584,7 +587,7 @@
             <h2 class="modal-title">🌸 مرحباً بك في حديقة التواضع</h2>
             <div class="modal-body">
                 أهلاً بك يا بطل في رحلة اكتشاف خُلق التواضع الجميل!
-                <br>أمامك 17 باباً غامضاً يحوي كل منها سؤالاً مفيداً.
+                <br>أمامك 16 باباً غامضاً يحوي كل منها سؤالاً مفيداً.
                 <div class="input-group">
                     <label for="studentNameInput">ادخل اسمك الكامل للبدء:</label>
                     <input type="text" id="studentNameInput" placeholder="اكتب اسمك هنا..." autocomplete="off">
@@ -691,91 +694,70 @@
     </div>
 
     <script>
-        // Web Audio Synthesizer
-        let audioCtx = null;
+        // Web Audio API Synthesizer for Sound Effects
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-        function getAudioContext() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
+        function playSound(type) {
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
-            return audioCtx;
-        }
 
-        function playSound(type) {
-            try {
-                const ctx = getAudioContext();
-                if (!ctx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
 
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
+            const now = audioCtx.currentTime;
 
-                const now = ctx.currentTime;
-
-                if (type === 'door') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(200, now);
-                    osc.frequency.exponentialRampToValueAtTime(450, now + 0.35);
-                    gain.gain.setValueAtTime(0.2, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
-                    osc.start(now);
-                    osc.stop(now + 0.35);
-                } 
-                else if (type === 'correct') {
-                    const freqs = [523.25, 659.25, 783.99, 1046.50];
-                    freqs.forEach((f, idx) => {
-                        const subOsc = ctx.createOscillator();
-                        const subGain = ctx.createGain();
-                        subOsc.type = 'triangle';
-                        subOsc.frequency.setValueAtTime(f, now + idx * 0.08);
-                        subGain.gain.setValueAtTime(0.25, now + idx * 0.08);
-                        subGain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.3);
-                        subOsc.connect(subGain);
-                        subGain.connect(ctx.destination);
-                        subOsc.start(now + idx * 0.08);
-                        subOsc.stop(now + idx * 0.08 + 0.3);
-                    });
-                } 
-                else if (type === 'wrong') {
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(220, now);
-                    osc.frequency.linearRampToValueAtTime(110, now + 0.35);
-                    gain.gain.setValueAtTime(0.2, now);
-                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
-                    osc.start(now);
-                    osc.stop(now + 0.35);
-                } 
-                else if (type === 'win') {
-                    const notes = [523.25, 659.25, 783.99, 1046.5, 880, 1046.5];
-                    notes.forEach((f, idx) => {
-                        const subOsc = ctx.createOscillator();
-                        const subGain = ctx.createGain();
-                        subOsc.type = 'square';
-                        subOsc.frequency.setValueAtTime(f, now + idx * 0.12);
-                        subGain.gain.setValueAtTime(0.15, now + idx * 0.12);
-                        subGain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.35);
-                        subOsc.connect(subGain);
-                        subGain.connect(ctx.destination);
-                        subOsc.start(now + idx * 0.12);
-                        subOsc.stop(now + idx * 0.12 + 0.35);
-                    });
-                }
-            } catch (e) {
-                console.log("Audio error:", e);
+            if (type === 'doorOpen') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(600, now + 0.3);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'correct') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'wrong') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.setValueAtTime(160, now + 0.15);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            } else if (type === 'win') {
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const noteOsc = audioCtx.createOscillator();
+                    const noteGain = audioCtx.createGain();
+                    noteOsc.connect(noteGain);
+                    noteGain.connect(audioCtx.destination);
+                    noteOsc.type = 'triangle';
+                    noteOsc.frequency.setValueAtTime(freq, now + idx * 0.12);
+                    noteGain.gain.setValueAtTime(0.25, now + idx * 0.12);
+                    noteGain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.12 + 0.25);
+                    noteOsc.start(now + idx * 0.12);
+                    noteOsc.stop(now + idx * 0.12 + 0.25);
+                });
             }
         }
 
-        // Updated Questions Dataset on Humility (التواضع) - 17 Questions
+        // Questions Dataset on Humility (التواضع) - 16 Questions
         const questionsList = [
             // 9 True/False Questions
             { id: 1, type: 'tf', text: 'التواضع مذكور في القرآن والسنة', answer: true },
             { id: 2, type: 'tf', text: 'التواضع هو ترك التروس وكراهية التعظيم', answer: true },
             { id: 3, type: 'tf', text: 'التواضع يرفع المرء قدرًا، ويعظم له خطرًا، ويزيده نبلًا', answer: true },
-            { id: 4, type: 'tf', text: 'المتواضع شخص مكروه بين الناس', answer: false },
+            { id: 4, type: 'tf', text: 'المتواضع شخص مكروه بين الناس', answer: false }, // Explicitly set to FALSE
             { id: 5, type: 'tf', text: 'التواضع يؤلف القلوب ويفتح مغاليقها', answer: true },
             { id: 6, type: 'tf', text: 'أقسام التواضع ثلاثة', answer: false },
             { id: 7, type: 'tf', text: 'التواضع تواضعان، أحدهما محمود والآخر مذموم', answer: true },
@@ -854,106 +836,51 @@
             }
         ];
 
-        const positivePhrases = [
-            "أحسنت يا متواضع! إجابة سديدة ومثالية 🎁",
-            "رائع جداً! معرفتك بالخُلق العظيم تنير دربك 🎁",
-            "ممتاز! عمل صالح وإجابة صحيحة 👏",
-            "إجابة موفقة! استمر في التميز والتقدم 🚀",
-            "بارَك الله فيك! خطواتك نحو النجاح ثابتة 💪"
-        ];
-
         const encouragingPhrases = [
-            "لا بأس يا بطل! تعلمت المعلومة الصحيحة الآن 🌱",
-            "محاولة طيبة! فقدت روحاً واحدة ولكن الرحلة مستمرة 💪",
-            "ركز أكثر في الباب القادم، فالمغامرة لم تنتهِ بعد! ☀️",
-            "كل خطوة هي درس مفيد، استجمع قواك وانطلق! 🚀"
+            "إجابة ممتازة! التواضع زينة العقول 🌸",
+            "أحسنت صنعاً! خُلُق التواضع يرفع صاحبه 🌺",
+            "رائع جداً! استمر بالعمل الطيب ⭐",
+            "إجابة صحيحة ومتميزة! بارك الله فيك 🌱",
+            "مبدع بطل التواضع! 👏"
         ];
 
         let playerName = '';
         let score = 0;
         let lives = 3;
         let openedDoorsCount = 0;
-        let doorStates = Array(17).fill(false); // track opened doors for 17 doors
+        let doorStates = Array(16).fill(false);
         let currentActiveDoorIndex = -1;
         let isOpeningDoor = false;
         let currentSessionId = null;
 
         function startGame() {
-            const input = document.getElementById('studentNameInput');
-            const name = input.value.trim();
-            if (!name) {
-                alert('يرجى إدخال اسم الطالب أولاً للبدء!');
+            const input = document.getElementById('studentNameInput').value.trim();
+            if (!input) {
+                alert('لطفاً اكتب اسمك أولاً لنبدأ المغامرة!');
                 return;
             }
-            playerName = name;
+
+            playerName = input;
             document.getElementById('displayName').innerText = playerName;
             closeModal('welcomeModal');
-            
-            getAudioContext();
+
+            currentSessionId = 'session_' + Date.now();
             resetGameState();
-            
-            // Register student entry in records immediately upon starting
-            createNewSessionRecord();
+            saveSessionRecord('في اللعب');
         }
 
-        function createNewSessionRecord() {
-            currentSessionId = Date.now();
-            const records = JSON.parse(localStorage.getItem('doors_game_records') || '[]');
-            const newRecord = {
-                id: currentSessionId,
-                name: playerName,
-                date: new Date().toLocaleString('ar-EG'),
-                score: 0,
-                doorsOpened: 0,
-                lives: 3,
-                status: 'جاري اللعب ⏳'
-            };
-            records.push(newRecord);
-            localStorage.setItem('doors_game_records', JSON.stringify(records));
-            
-            // Send to Google Sheet automatically
-            sendToGoogleSheet(newRecord);
-        }
-
-        function updateSessionRecord(isEnd = false, isWin = false) {
-            if (!currentSessionId) return;
-            const records = JSON.parse(localStorage.getItem('doors_game_records') || '[]');
-            const index = records.findIndex(r => r.id === currentSessionId);
-            if (index !== -1) {
-                records[index].score = score;
-                records[index].doorsOpened = openedDoorsCount;
-                records[index].lives = lives;
-                records[index].date = new Date().toLocaleString('ar-EG');
-                if (isEnd) {
-                    records[index].status = isWin ? 'فوز ✏️' : 'خسارة 💔';
-                }
-                localStorage.setItem('doors_game_records', JSON.stringify(records));
-
-                // Update record on Google Sheet
-                sendToGoogleSheet(records[index]);
-            }
-        }
-
-        function sendToGoogleSheet(recordData) {
-            const sheetUrl = localStorage.getItem('doors_game_sheet_url');
-            if (!sheetUrl) return;
-            try {
-                fetch(sheetUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify(recordData)
-                }).catch(err => console.log('Google Sheet sync error:', err));
-            } catch (e) {
-                console.log('Google Sheet Exception:', e);
-            }
+        function resetGame() {
+            closeModal('endModal');
+            resetGameState();
+            currentSessionId = 'session_' + Date.now();
+            saveSessionRecord('في اللعب');
         }
 
         function resetGameState() {
             score = 0;
             lives = 3;
             openedDoorsCount = 0;
-            doorStates = Array(17).fill(false);
+            doorStates = Array(16).fill(false);
             isOpeningDoor = false;
             updateHUD();
             buildDoorsGrid();
@@ -965,14 +892,14 @@
             for (let i = 0; i < lives; i++) hearts += '❤️';
             for (let i = lives; i < 3; i++) hearts += '🖤';
             document.getElementById('livesDisplay').innerText = hearts || '🖤🖤🖤';
-            document.getElementById('progressSubtitle').innerText = `الأبواب المتبقية: ${17 - openedDoorsCount} من أصل 17`;
+            document.getElementById('progressSubtitle').innerText = `الأبواب المتبقية: ${16 - openedDoorsCount} من أصل 16`;
         }
 
         function buildDoorsGrid() {
             const grid = document.getElementById('doorsGrid');
             grid.innerHTML = '';
 
-            for (let i = 0; i < 17; i++) {
+            for (let i = 0; i < 16; i++) {
                 const doorWrapper = document.createElement('div');
                 doorWrapper.className = 'door-wrapper' + (doorStates[i] ? ' completed' : '');
                 doorWrapper.onclick = () => selectDoor(i);
@@ -994,97 +921,94 @@
         }
 
         function selectDoor(index) {
-            if (doorStates[index] || isOpeningDoor || lives <= 0) return;
+            if (doorStates[index] || isOpeningDoor) return;
 
             isOpeningDoor = true;
             currentActiveDoorIndex = index;
+            playSound('doorOpen');
 
-            playSound('door');
-
-            const grid = document.getElementById('doorsGrid');
-            const targetDoor = grid.children[index];
+            const doorElements = document.querySelectorAll('.door-wrapper');
+            const targetDoor = doorElements[index];
             targetDoor.classList.add('opened');
 
             setTimeout(() => {
-                showQuestionModal(questionsList[index]);
+                showQuestionModal(index);
             }, 600);
         }
 
-        function showQuestionModal(qData) {
-            const titleEl = document.getElementById('questionTitle');
-            const textEl = document.getElementById('questionText');
-            const badgeEl = document.getElementById('questionBadge');
-            const optionsContainer = document.getElementById('optionsContainer');
+        function showQuestionModal(doorIndex) {
+            const question = questionsList[doorIndex];
+            document.getElementById('questionBadge').innerText = `الباب رقم ${doorIndex + 1}`;
+            document.getElementById('questionTitle').innerText = question.type === 'tf' ? 'صح أم خطأ؟' : 'اختر الإجابة الصحيحة';
+            document.getElementById('questionText').innerText = question.text;
 
-            badgeEl.innerText = `الباب رقم ${currentActiveDoorIndex + 1}`;
-            titleEl.innerText = qData.type === 'tf' ? 'سؤال صح أم خطأ' : 'اختر الإجابة الصحيحة';
-            textEl.innerText = qData.text;
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
 
-            optionsContainer.innerHTML = '';
-
-            if (qData.type === 'tf') {
+            if (question.type === 'tf') {
                 const btnTrue = document.createElement('button');
                 btnTrue.className = 'option-btn';
-                btnTrue.innerHTML = '<span>صحيح (✅)</span> <span>➔</span>';
-                btnTrue.onclick = () => handleAnswer(true, qData);
+                btnTrue.innerHTML = '<span>✅ صح</span> <span>◄</span>';
+                btnTrue.onclick = () => handleAnswer(true);
 
                 const btnFalse = document.createElement('button');
                 btnFalse.className = 'option-btn';
-                btnFalse.innerHTML = '<span>خطأ (❎)</span> <span>➔</span>';
-                btnFalse.onclick = () => handleAnswer(false, qData);
+                btnFalse.innerHTML = '<span>❌ خطأ</span> <span>◄</span>';
+                btnFalse.onclick = () => handleAnswer(false);
 
-                optionsContainer.appendChild(btnTrue);
-                optionsContainer.appendChild(btnFalse);
-            } else if (qData.type === 'mc') {
-                qData.options.forEach(opt => {
+                container.appendChild(btnTrue);
+                container.appendChild(btnFalse);
+            } else {
+                question.options.forEach((opt) => {
                     const btn = document.createElement('button');
                     btn.className = 'option-btn';
-                    btn.innerHTML = `<span>${opt.text}</span> <span>➔</span>`;
-                    btn.onclick = () => handleAnswer(opt.correct, qData);
-                    optionsContainer.appendChild(btn);
+                    btn.innerHTML = `<span>${opt.text}</span> <span>◄</span>`;
+                    btn.onclick = () => handleAnswer(opt.correct);
+                    container.appendChild(btn);
                 });
             }
 
             openModal('questionModal');
         }
 
-        function handleAnswer(isUserCorrect, qData) {
+        function handleAnswer(userAnswer) {
             closeModal('questionModal');
 
-            doorStates[currentActiveDoorIndex] = true;
-            openedDoorsCount++;
+            const currentQuestion = questionsList[currentActiveDoorIndex];
+            let isCorrect = false;
 
-            const grid = document.getElementById('doorsGrid');
-            const targetDoor = grid.children[currentActiveDoorIndex];
-            targetDoor.classList.add('completed');
+            if (currentQuestion.type === 'tf') {
+                isCorrect = (userAnswer === currentQuestion.answer);
+            } else {
+                isCorrect = userAnswer; // boolean sent from options
+            }
 
-            let feedbackIcon = '';
-            let feedbackTitle = '';
-            let feedbackText = '';
+            const doorElements = document.querySelectorAll('.door-wrapper');
+            const targetDoor = doorElements[currentActiveDoorIndex];
 
-            if (isUserCorrect) {
+            if (isCorrect) {
                 playSound('correct');
                 score += 100;
+                openedDoorsCount++;
+                doorStates[currentActiveDoorIndex] = true;
+                targetDoor.classList.add('completed');
+
                 showScorePop('+100');
-                
-                feedbackIcon = '🎁';
-                feedbackTitle = 'إجابة صحيحة وزاهية!';
-                feedbackText = positivePhrases[Math.floor(Math.random() * positivePhrases.length)];
+
+                const phrase = encouragingPhrases[Math.floor(Math.random() * encouragingPhrases.length)];
+                showFeedback(true, 'إجابة صحيحة!', phrase, '🌸');
             } else {
                 playSound('wrong');
                 lives--;
-                
-                feedbackIcon = '💔';
-                feedbackTitle = 'فقدت روحاً واحدة';
-                feedbackText = encouragingPhrases[Math.floor(Math.random() * encouragingPhrases.length)];
+                openedDoorsCount++;
+                doorStates[currentActiveDoorIndex] = true;
+                targetDoor.classList.add('completed');
+
+                showFeedback(false, 'إجابة تحتاج لمراجعة', 'حاول الاستفادة من هذه المعلومة القيمة في طريقك للتواضع!', '💡');
             }
 
             updateHUD();
-            updateSessionRecord();
-
-            setTimeout(() => {
-                showFeedbackModal(feedbackIcon, feedbackTitle, feedbackText);
-            }, 300);
+            saveSessionRecord(lives <= 0 ? 'خسارة' : (openedDoorsCount >= 16 ? 'فوز كامل' : 'في اللعب'));
         }
 
         function showScorePop(text) {
@@ -1096,10 +1020,11 @@
             }, 800);
         }
 
-        function showFeedbackModal(icon, title, text) {
+        function showFeedback(isSuccess, title, msg, icon) {
             document.getElementById('feedbackIcon').innerText = icon;
             document.getElementById('feedbackTitle').innerText = title;
-            document.getElementById('feedbackText').innerText = text;
+            document.getElementById('feedbackTitle').style.color = isSuccess ? 'var(--garden-green-dark)' : 'var(--wrong-red)';
+            document.getElementById('feedbackText').innerText = msg;
             openModal('feedbackModal');
         }
 
@@ -1107,10 +1032,9 @@
             closeModal('feedbackModal');
             isOpeningDoor = false;
 
-            // Check Game Over or Win condition
             if (lives <= 0) {
                 endGame(false);
-            } else if (openedDoorsCount >= 17) {
+            } else if (openedDoorsCount >= 16) {
                 endGame(true);
             }
         }
@@ -1120,10 +1044,10 @@
 
             if (isWin) {
                 playSound('win');
-                document.getElementById('endIcon').innerText = '✏️';
+                document.getElementById('endIcon').innerText = '🏆';
                 document.getElementById('endTitle').innerText = '🎉 مبروك الفوز التام!';
                 document.getElementById('endText').innerHTML = `
-                    أحسنت يا بطل! أنهيت جميع أبواب حديقة التواضع الـ 17 بنجاح ورقي.
+                    أحسنت يا بطل! أنهيت جميع أبواب حديقة التواضع الـ 16 بنجاح ورقي.
                     <br><br><strong>مجموع النقاط: ${score}</strong>
                 `;
             } else {
@@ -1132,47 +1056,74 @@
                 document.getElementById('endTitle').innerText = 'حظاً موفقاً المرة القادمة';
                 document.getElementById('endText').innerHTML = `
                     لقد نفدت أرواحك الثلاثة. لكنك تعلمت الكثير عن خُلق التواضع العظيم!
-                    <br><br><strong>النقاط المحققة: ${score}</strong> | <strong>الأبواب: ${openedDoorsCount} / 17</strong>
+                    <br><br><strong>النقاط المحققة: ${score}</strong> | <strong>الأبواب: ${openedDoorsCount} / 16</strong>
                 `;
             }
 
             openModal('endModal');
         }
 
-        function resetGame() {
-            closeModal('endModal');
-            resetGameState();
-            createNewSessionRecord();
+        function saveSessionRecord(status) {
+            const records = JSON.parse(localStorage.getItem('doors_game_records') || '[]');
+            const existingIndex = records.findIndex(r => r.id === currentSessionId);
+
+            const recordData = {
+                id: currentSessionId,
+                name: playerName || 'طالب',
+                date: new Date().toLocaleString('ar-EG'),
+                doorsOpened: openedDoorsCount,
+                score: score,
+                lives: lives,
+                status: status
+            };
+
+            if (existingIndex >= 0) {
+                records[existingIndex] = recordData;
+            } else {
+                records.push(recordData);
+            }
+
+            localStorage.setItem('doors_game_records', JSON.stringify(records));
+            sendToGoogleSheet(recordData);
         }
 
-        function promptAdminPass() {
-            const pass = prompt('ادخل الرقم السري لعرض سجل الطلاب:');
-            if (pass === '2580') {
-                renderAdminLog();
-                openModal('adminModal');
-            } else if (pass !== null) {
-                alert('الرقم السري غير صحيح!');
+        function updateSessionRecord(isFinished, isWin) {
+            saveSessionRecord(isWin ? 'فوز كامل' : 'خسارة');
+        }
+
+        function sendToGoogleSheet(record) {
+            const sheetUrl = localStorage.getItem('doors_game_sheet_url');
+            if (!sheetUrl) return;
+
+            try {
+                fetch(sheetUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(record)
+                });
+            } catch (e) {
+                console.log('Google Sheet integration notice:', e);
             }
         }
 
         function saveGoogleSheetUrl() {
-            const urlInput = document.getElementById('googleSheetUrlInput').value.trim();
-            if (urlInput) {
-                localStorage.setItem('doors_game_sheet_url', urlInput);
-                alert('تم حفظ رابط Google Sheet بنجاح! سيتم إرسال النتائج تلقائياً إلى الشيت مع كل سجل طالب جديد.');
-            } else {
-                localStorage.removeItem('doors_game_sheet_url');
-                alert('تم إزالة رابط Google Sheet.');
+            const url = document.getElementById('googleSheetUrlInput').value.trim();
+            localStorage.setItem('doors_game_sheet_url', url);
+            alert(url ? 'تم حفظ رابط Google Sheet بنجاح!' : 'تم إزالة الرابط.');
+        }
+
+        function promptAdminPass() {
+            const pass = prompt('ادخل كلمة مرور معلم/مسؤول اللعبة:');
+            if (pass === '1234') {
+                renderAdminLog();
+                openModal('adminModal');
+            } else if (pass !== null) {
+                alert('كلمة المرور غير صحيحة!');
             }
         }
 
-        function showGoogleScriptInstructions() {
-            const codeText = `function doPost(e) {\n  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();\n  var data = JSON.parse(e.postData.contents);\n  sheet.appendRow([data.name, data.date, data.doorsOpened + " / 17", data.score, data.lives, data.status]);\n  return ContentService.createTextOutput("OK");\n}`;
-            alert("خطوات ربط Google Sheet:\n1. افتح جدول بيانات جديد في Google Sheets.\n2. من القائمة اختر: الإضافات (Extensions) -> Apps Script.\n3. الصق الكود التالي بداخل المحرر:\n\n" + codeText + "\n\n4. اضغط نشر (Deploy) -> نشر جديد (New deployment) -> اختر Web App.\n5. اضبط صلاحية الوصول (Who has access) إلى 'Anyone' (أي شخص).\n6. انسخ رابط التطبيق الممنوح وقم بلصقه في خانة الرابط هنا.");
-        }
-
         function renderAdminLog() {
-            // Load saved Sheet URL into input field
             const savedUrl = localStorage.getItem('doors_game_sheet_url') || '';
             const urlInput = document.getElementById('googleSheetUrlInput');
             if (urlInput) urlInput.value = savedUrl;
@@ -1186,7 +1137,6 @@
                 return;
             }
 
-            // Show newest entries first
             const sortedRecords = [...records].reverse();
 
             sortedRecords.forEach(r => {
@@ -1194,7 +1144,7 @@
                 tr.innerHTML = `
                     <td><strong>${r.name}</strong></td>
                     <td>${r.date}</td>
-                    <td>${r.doorsOpened ?? 0} / 17</td>
+                    <td>${r.doorsOpened ?? 0} / 16</td>
                     <td><strong>${r.score}</strong></td>
                     <td>${r.lives}</td>
                     <td>${r.status}</td>
@@ -1221,7 +1171,7 @@
             csvContent += "اسم الطالب,تاريخ ووقت الدخول,الأبواب المنجزة,النقاط,الأرواح المتبقية,الحالة\n";
 
             records.forEach(r => {
-                csvContent += `"${r.name}","${r.date}","${r.doorsOpened ?? 0}/17","${r.score}","${r.lives}","${r.status}"\n`;
+                csvContent += `"${r.name}","${r.date}","${r.doorsOpened ?? 0}/16","${r.score}","${r.lives}","${r.status}"\n`;
             });
 
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -1234,6 +1184,12 @@
             document.body.removeChild(link);
         }
 
+        function showGoogleScriptInstructions() {
+            const codeText = `function doPost(e) {\n  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();\n  var data = JSON.parse(e.postData.contents);\n  sheet.appendRow([data.name, data.date, data.doorsOpened + " / 16", data.score, data.lives, data.status]);\n  return ContentService.createTextOutput("OK");\n}`;
+            alert("خطوات ربط Google Sheet:\n1. افتح جدول بيانات جديد في Google Sheets.\n2. من القائمة اختر: الإضافات (Extensions) -> Apps Script.\n3. الصق الكود التالي بداخل المح المحرر:\n\n" + codeText + "\n\n4. اضغط نشر (Deploy) -> نشر جديد (New deployment) -> اختر Web App.\n5. اضبط صلاحية الوصول (Who has access) إلى 'Anyone' (أي شخص).\n6. انسخ رابط التطبيق الممنوح وقم بلصقه في خانة الرابط هنا.");
+        }
+
+        // Modal Helpers
         function openModal(id) {
             document.getElementById(id).classList.add('active');
         }
@@ -1243,8 +1199,9 @@
         }
 
         window.onload = function() {
-            document.getElementById('studentNameInput').focus();
+            buildDoorsGrid();
         };
     </script>
 </body>
 </html>
+```
