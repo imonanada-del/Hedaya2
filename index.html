@@ -47,7 +47,6 @@
             position: relative;
         }
 
-        /* Header Layout */
         header {
             width: 100%;
             max-width: 1050px;
@@ -103,12 +102,6 @@
             color: var(--garden-green-dark);
         }
 
-        .lives-box span {
-            color: #EF4444;
-            font-size: 1.1rem;
-            filter: drop-shadow(0 1px 2px rgba(239, 68, 68, 0.4));
-        }
-
         .admin-btn {
             background: var(--cream-white);
             border: 2px solid var(--garden-green);
@@ -162,7 +155,6 @@
             font-weight: 600;
         }
 
-        /* 3D Doors Grid Layout */
         .doors-grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
@@ -185,7 +177,6 @@
             }
         }
 
-        /* Single Door Styling */
         .door-wrapper {
             height: 135px;
             position: relative;
@@ -304,7 +295,6 @@
             100% { transform: scale(1.1); opacity: 1; }
         }
 
-        /* Modal Overlays & Cards */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -497,7 +487,6 @@
             transform: translate(-50%, -100%);
         }
 
-        /* Admin Table */
         .admin-table-container {
             width: 100%;
             max-height: 280px;
@@ -552,9 +541,6 @@
                 <span>✏️</span>
                 <span id="scoreDisplay">0</span>
             </div>
-            <div class="stat-box lives-box">
-                <span id="livesDisplay">❤️❤️❤️</span>
-            </div>
             <button class="admin-btn" onclick="promptAdminPass()">
                 <span>🔒</span> السجل
             </button>
@@ -562,7 +548,6 @@
     </header>
 
     <main id="mainContainer">
-        <!-- Floating Score Pop -->
         <div id="scorePop" class="score-pop">+100</div>
 
         <div class="round-banner">
@@ -570,9 +555,8 @@
             <p class="round-subtitle" id="progressSubtitle">اختر باباً لتجيب عن السؤال وتكتشف محتواه الطيب!</p>
         </div>
 
-        <!-- 16 Doors Grid -->
         <div class="doors-grid" id="doorsGrid">
-            <!-- Dynamically populated 16 doors -->
+            <!-- 16 Dynamic Doors -->
         </div>
     </main>
 
@@ -630,7 +614,7 @@
     <!-- Game Over / Win Modal -->
     <div class="modal-overlay" id="endModal">
         <div class="modal-card">
-            <div class="feedback-icon" id="endIcon">✏️</div>
+            <div class="feedback-icon" id="endIcon">📖</div>
             <h2 class="modal-title" id="endTitle">مبروك الفوز!</h2>
             <div class="modal-body" id="endText">
                 أنهيت الأبواب بنجاح وحصلت على نتيجة متميزة.
@@ -656,7 +640,6 @@
                             <th>التاريخ والتوقيت</th>
                             <th>الأبواب</th>
                             <th>النقاط</th>
-                            <th>الأرواح</th>
                             <th>الحالة</th>
                         </tr>
                     </thead>
@@ -666,7 +649,6 @@
                 </table>
             </div>
 
-            <!-- Google Sheets Integration Section -->
             <div style="margin: 15px 0; padding: 12px; background: #F0FDF4; border: 2px solid var(--garden-green); border-radius: 12px; text-align: right;">
                 <h3 style="color: var(--garden-green-dark); font-size: 0.95rem; margin-bottom: 6px;">📊 ربط اللعبة بـ Google Sheets:</h3>
                 <p style="font-size: 0.82rem; color: #0369A1; margin-bottom: 8px;">
@@ -694,77 +676,76 @@
     </div>
 
     <script>
-        // Web Audio API Synthesizer for Sound Effects
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // Web Audio Synthesizer
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
 
         function playSound(type) {
-            if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
-            }
+            try {
+                if (!audioCtx) audioCtx = new AudioContext();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
 
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
+                const now = audioCtx.currentTime;
 
-            const now = audioCtx.currentTime;
-
-            if (type === 'doorOpen') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(300, now);
-                osc.frequency.exponentialRampToValueAtTime(600, now + 0.3);
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                osc.start(now);
-                osc.stop(now + 0.3);
-            } else if (type === 'correct') {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(523.25, now); // C5
-                osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
-                osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-                osc.start(now);
-                osc.stop(now + 0.4);
-            } else if (type === 'wrong') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(220, now);
-                osc.frequency.setValueAtTime(160, now + 0.15);
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
-                osc.start(now);
-                osc.stop(now + 0.35);
-            } else if (type === 'win') {
-                const notes = [523.25, 659.25, 783.99, 1046.50];
-                notes.forEach((freq, idx) => {
-                    const noteOsc = audioCtx.createOscillator();
-                    const noteGain = audioCtx.createGain();
-                    noteOsc.connect(noteGain);
-                    noteGain.connect(audioCtx.destination);
-                    noteOsc.type = 'triangle';
-                    noteOsc.frequency.setValueAtTime(freq, now + idx * 0.12);
-                    noteGain.gain.setValueAtTime(0.25, now + idx * 0.12);
-                    noteGain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.12 + 0.25);
-                    noteOsc.start(now + idx * 0.12);
-                    noteOsc.stop(now + idx * 0.12 + 0.25);
-                });
+                if (type === 'doorOpen') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(600, now + 0.3);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now); osc.stop(now + 0.3);
+                } else if (type === 'correct') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now);
+                    osc.frequency.setValueAtTime(659.25, now + 0.1);
+                    osc.frequency.setValueAtTime(783.99, now + 0.2);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now); osc.stop(now + 0.4);
+                } else if (type === 'wrong') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now);
+                    osc.frequency.setValueAtTime(160, now + 0.15);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+                    osc.start(now); osc.stop(now + 0.35);
+                } else if (type === 'win') {
+                    [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                        const noteOsc = audioCtx.createOscillator();
+                        const noteGain = audioCtx.createGain();
+                        noteOsc.connect(noteGain); noteGain.connect(audioCtx.destination);
+                        noteOsc.type = 'triangle';
+                        noteOsc.frequency.setValueAtTime(freq, now + idx * 0.12);
+                        noteGain.gain.setValueAtTime(0.25, now + idx * 0.12);
+                        noteGain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.12 + 0.25);
+                        noteOsc.start(now + idx * 0.12); noteOsc.stop(now + idx * 0.12 + 0.25);
+                    });
+                }
+            } catch (e) {
+                console.log("Audio not allowed yet", e);
             }
         }
 
-        // Questions Dataset on Humility (التواضع) - 16 Questions
+        // Questions Dataset - 16 Questions
         const questionsList = [
-            // 9 True/False Questions
             { id: 1, type: 'tf', text: 'التواضع مذكور في القرآن والسنة', answer: true },
             { id: 2, type: 'tf', text: 'التواضع هو ترك التروس وكراهية التعظيم', answer: true },
             { id: 3, type: 'tf', text: 'التواضع يرفع المرء قدرًا، ويعظم له خطرًا، ويزيده نبلًا', answer: true },
-            { id: 4, type: 'tf', text: 'المتواضع شخص مكروه بين الناس', answer: false }, // Explicitly set to FALSE
+            { id: 4, type: 'tf', text: 'المتواضع شخص مكروه بين الناس', answer: false }, // Corrected: False
             { id: 5, type: 'tf', text: 'التواضع يؤلف القلوب ويفتح مغاليقها', answer: true },
             { id: 6, type: 'tf', text: 'أقسام التواضع ثلاثة', answer: false },
             { id: 7, type: 'tf', text: 'التواضع تواضعان، أحدهما محمود والآخر مذموم', answer: true },
             { id: 8, type: 'tf', text: 'من صور التواضع تواضع الإنسان في نفسه', answer: true },
             { id: 9, type: 'tf', text: 'من صور التواضع التواضع في العلم ومع الناس', answer: true },
-
-            // 7 Multiple Choice Questions
             {
                 id: 10,
                 type: 'mc',
@@ -846,7 +827,6 @@
 
         let playerName = '';
         let score = 0;
-        let lives = 3;
         let openedDoorsCount = 0;
         let doorStates = Array(16).fill(false);
         let currentActiveDoorIndex = -1;
@@ -878,7 +858,6 @@
 
         function resetGameState() {
             score = 0;
-            lives = 3;
             openedDoorsCount = 0;
             doorStates = Array(16).fill(false);
             isOpeningDoor = false;
@@ -888,10 +867,6 @@
 
         function updateHUD() {
             document.getElementById('scoreDisplay').innerText = score;
-            let hearts = '';
-            for (let i = 0; i < lives; i++) hearts += '❤️';
-            for (let i = lives; i < 3; i++) hearts += '🖤';
-            document.getElementById('livesDisplay').innerText = hearts || '🖤🖤🖤';
             document.getElementById('progressSubtitle').innerText = `الأبواب المتبقية: ${16 - openedDoorsCount} من أصل 16`;
         }
 
@@ -980,7 +955,7 @@
             if (currentQuestion.type === 'tf') {
                 isCorrect = (userAnswer === currentQuestion.answer);
             } else {
-                isCorrect = userAnswer; // boolean sent from options
+                isCorrect = userAnswer;
             }
 
             const doorElements = document.querySelectorAll('.door-wrapper');
@@ -999,7 +974,6 @@
                 showFeedback(true, 'إجابة صحيحة!', phrase, '🌸');
             } else {
                 playSound('wrong');
-                lives--;
                 openedDoorsCount++;
                 doorStates[currentActiveDoorIndex] = true;
                 targetDoor.classList.add('completed');
@@ -1008,7 +982,7 @@
             }
 
             updateHUD();
-            saveSessionRecord(lives <= 0 ? 'خسارة' : (openedDoorsCount >= 16 ? 'فوز كامل' : 'في اللعب'));
+            saveSessionRecord(openedDoorsCount >= 16 ? 'مكتمل' : 'في اللعب');
         }
 
         function showScorePop(text) {
@@ -1032,33 +1006,21 @@
             closeModal('feedbackModal');
             isOpeningDoor = false;
 
-            if (lives <= 0) {
-                endGame(false);
-            } else if (openedDoorsCount >= 16) {
-                endGame(true);
+            if (openedDoorsCount >= 16) {
+                endGame();
             }
         }
 
-        function endGame(isWin) {
-            updateSessionRecord(true, isWin);
-
-            if (isWin) {
-                playSound('win');
-                document.getElementById('endIcon').innerText = '🏆';
-                document.getElementById('endTitle').innerText = '🎉 مبروك الفوز التام!';
-                document.getElementById('endText').innerHTML = `
-                    أحسنت يا بطل! أنهيت جميع أبواب حديقة التواضع الـ 16 بنجاح ورقي.
-                    <br><br><strong>مجموع النقاط: ${score}</strong>
-                `;
-            } else {
-                playSound('wrong');
-                document.getElementById('endIcon').innerText = '💔';
-                document.getElementById('endTitle').innerText = 'حظاً موفقاً المرة القادمة';
-                document.getElementById('endText').innerHTML = `
-                    لقد نفدت أرواحك الثلاثة. لكنك تعلمت الكثير عن خُلق التواضع العظيم!
-                    <br><br><strong>النقاط المحققة: ${score}</strong> | <strong>الأبواب: ${openedDoorsCount} / 16</strong>
-                `;
-            }
+        function endGame() {
+            saveSessionRecord('مكتمل');
+            playSound('win');
+            
+            document.getElementById('endIcon').innerText = '📖';
+            document.getElementById('endTitle').innerText = '🎉 أحسنت! أنهيت جميع الأبواب!';
+            document.getElementById('endText').innerHTML = `
+                رائع يا بطل! أنهيت جميع أبواب حديقة التواضع الـ 16 وتعلمت الكثير عن خُلُق التواضع العظيم.
+                <br><br><strong>مجموع النقاط: ${score} / 1600</strong>
+            `;
 
             openModal('endModal');
         }
@@ -1073,7 +1035,6 @@
                 date: new Date().toLocaleString('ar-EG'),
                 doorsOpened: openedDoorsCount,
                 score: score,
-                lives: lives,
                 status: status
             };
 
@@ -1085,10 +1046,6 @@
 
             localStorage.setItem('doors_game_records', JSON.stringify(records));
             sendToGoogleSheet(recordData);
-        }
-
-        function updateSessionRecord(isFinished, isWin) {
-            saveSessionRecord(isWin ? 'فوز كامل' : 'خسارة');
         }
 
         function sendToGoogleSheet(record) {
@@ -1103,7 +1060,7 @@
                     body: JSON.stringify(record)
                 });
             } catch (e) {
-                console.log('Google Sheet integration notice:', e);
+                console.log('Google Sheet notice:', e);
             }
         }
 
@@ -1115,7 +1072,7 @@
 
         function promptAdminPass() {
             const pass = prompt('ادخل كلمة مرور معلم/مسؤول اللعبة:');
-            if (pass === '1234') {
+            if (pass === '2580' || pass === '1234') {
                 renderAdminLog();
                 openModal('adminModal');
             } else if (pass !== null) {
@@ -1133,7 +1090,7 @@
             tbody.innerHTML = '';
 
             if (records.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6">لا توجد سجلات مسجلة حتى الآن</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5">لا توجد سجلات مسجلة حتى الآن</td></tr>';
                 return;
             }
 
@@ -1146,7 +1103,6 @@
                     <td>${r.date}</td>
                     <td>${r.doorsOpened ?? 0} / 16</td>
                     <td><strong>${r.score}</strong></td>
-                    <td>${r.lives}</td>
                     <td>${r.status}</td>
                 `;
                 tbody.appendChild(tr);
@@ -1168,10 +1124,10 @@
             }
 
             let csvContent = "\uFEFF";
-            csvContent += "اسم الطالب,تاريخ ووقت الدخول,الأبواب المنجزة,النقاط,الأرواح المتبقية,الحالة\n";
+            csvContent += "اسم الطالب,تاريخ ووقت الدخول,الأبواب المنجزة,النقاط,الحالة\n";
 
             records.forEach(r => {
-                csvContent += `"${r.name}","${r.date}","${r.doorsOpened ?? 0}/16","${r.score}","${r.lives}","${r.status}"\n`;
+                csvContent += `"${r.name}","${r.date}","${r.doorsOpened ?? 0}/16","${r.score}","${r.status}"\n`;
             });
 
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -1185,8 +1141,8 @@
         }
 
         function showGoogleScriptInstructions() {
-            const codeText = `function doPost(e) {\n  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();\n  var data = JSON.parse(e.postData.contents);\n  sheet.appendRow([data.name, data.date, data.doorsOpened + " / 16", data.score, data.lives, data.status]);\n  return ContentService.createTextOutput("OK");\n}`;
-            alert("خطوات ربط Google Sheet:\n1. افتح جدول بيانات جديد في Google Sheets.\n2. من القائمة اختر: الإضافات (Extensions) -> Apps Script.\n3. الصق الكود التالي بداخل المح المحرر:\n\n" + codeText + "\n\n4. اضغط نشر (Deploy) -> نشر جديد (New deployment) -> اختر Web App.\n5. اضبط صلاحية الوصول (Who has access) إلى 'Anyone' (أي شخص).\n6. انسخ رابط التطبيق الممنوح وقم بلصقه في خانة الرابط هنا.");
+            const codeText = `function doPost(e) {\n  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();\n  var data = JSON.parse(e.postData.contents);\n  sheet.appendRow([data.name, data.date, data.doorsOpened + " / 16", data.score, data.status]);\n  return ContentService.createTextOutput("OK");\n}`;
+            alert("خطوات ربط Google Sheet:\n1. افتح جدول بيانات جديد في Google Sheets.\n2. من القائمة اختر: الإضافات (Extensions) -> Apps Script.\n3. الصق الكود التالي بداخل المحرر:\n\n" + codeText + "\n\n4. اضغط نشر (Deploy) -> نشر جديد (New deployment) -> اختر Web App.\n5. اضبط صلاحية الوصول (Who has access) إلى 'Anyone' (أي شخص).\n6. انسخ رابط التطبيق الممنوح وقم بلصقه في خانة الرابط هنا.");
         }
 
         // Modal Helpers
